@@ -1,0 +1,14 @@
+export const SCORING_WEIGHTS = {
+  SKILLS: 30,
+  EXPERIENCE: 25,
+  ELIGIBILITY: 20,
+  JOB_REALITY: 15,
+  COMPETITION: 10,
+} as const;
+
+export const DECISION_THRESHOLDS = {
+  APPLY: 75,
+  APPLY_WITH_IMPROVEMENTS: 55,
+  IMPROVE: 35,
+  // Below 35 is SKIP
+} as const;
