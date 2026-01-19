@@ -41,6 +41,10 @@ export async function POST(request: Request) {
       breakdown,
       missingSkills,
       notes,
+      debug: {
+        candidateRaw: candidateProfile.debug?.rawAIResponse,
+        jobRaw: jobRequirements.debug?.rawAIResponse,
+      }
     };
 
     return NextResponse.json(response);
