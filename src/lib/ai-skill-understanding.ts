@@ -177,6 +177,8 @@ export async function understandSkillsWithGemini(input: {
 
   // Primary: Gemini
   try {
+
+    
     return await runProvider("gemini", prompt);
   } catch (geminiError: any) {
     // Fallback: Groq (retry once using fallback provider)
