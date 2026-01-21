@@ -1,31 +1,58 @@
 export interface AnalysisRequest {
-  jobDescription: string;
+  jobDescriptionText: string;
   resumeText: string;
+  userId?: string;
+}
+
+export interface Skill {
+  key: string;
+  label: string;
+  category: "required" | "preferred" | "tool";
+}
+
+/**
+ * MANDATORY NORMALIZATION FUNCTION (LOCKED)
+ */
+export function normalizeSkill(label: string): { label: string; key: string } {
+  return {
+    label,
+    key: label.toLowerCase().replace(/[^a-z0-9]/g, ""),
+  };
+}
+
+export interface ScoreWithStatus {
+  score: number;
+  status: "MATCHED" | "PARTIAL" | "MISSING" | "NOT_REQUIRED";
 }
 
 export interface AnalysisBreakdown {
-  requiredSkills: number;
+  // Scores are 0-100.
+  requiredSkills: number; 
   preferredSkills: number;
   tools: number;
   experience: number;
-  education: number;
-  eligibility: number;
+
+  // Rich score categories
+  education: ScoreWithStatus;
+  eligibility: ScoreWithStatus;
+  
+  // Metadata / Display only
   jobReality: number;
   competition: number;
   isHardCapped: boolean;
 }
 
-export type Decision = "APPLY" | "APPLY_WITH_IMPROVEMENTS" | "IMPROVE" | "SKIP";
+export type Decision = "PASS" | "IMPROVE" | "REJECT";
 
 export interface AnalysisResponse {
   finalScore: number;
   decision: Decision;
+  isHardCapped: boolean;
   breakdown: AnalysisBreakdown;
   missingSkills: string[];
   notes: string[];
-  debug?: {
-    candidateRaw?: string;
-    jobRaw?: string;
+  meta: {
+    analysisVersion: string;
   };
 }
 
