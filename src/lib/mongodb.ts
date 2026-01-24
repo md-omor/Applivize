@@ -1,6 +1,14 @@
 import { MongoClient, MongoClientOptions } from "mongodb";
+import dns from "node:dns";
 
 const uri = process.env.MONGODB_URI;
+
+try {
+  // Prefer IPv4 addresses on platforms where IPv6 routes can cause TLS handshake failures.
+  (dns as unknown as { setDefaultResultOrder?: (order: string) => void })?.setDefaultResultOrder?.("ipv4first");
+} catch {
+  // ignore
+}
 
 // Let the connection string / driver handle TLS settings for MongoDB Atlas
 const options: MongoClientOptions = {
@@ -9,6 +17,7 @@ const options: MongoClientOptions = {
   socketTimeoutMS: 30000,
   maxPoolSize: 10,
   minPoolSize: 1,
+  family: 4,
 };
 
 let client: MongoClient;
