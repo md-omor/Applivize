@@ -67,6 +67,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
+  if (!process.env.MONGODB_URI?.trim()) {
+    return NextResponse.json(
+      {
+        error: "MONGODB_NOT_CONFIGURED",
+        message: 'Missing environment variable: "MONGODB_URI"',
+      },
+      { status: 500 }
+    );
+  }
+
   if (eventType === "user.deleted") {
     try {
       await deleteUser(userId);
@@ -107,6 +117,12 @@ export async function POST(request: Request) {
   try {
     await getOrCreateUser(userId, email);
   } catch (err) {
+    console.error("Clerk webhook Mongo context:", {
+      vercelEnv: process.env.VERCEL_ENV,
+      nodeEnv: process.env.NODE_ENV,
+      mongodbDb: process.env.MONGODB_DB,
+      hasMongoUri: Boolean(process.env.MONGODB_URI),
+    });
     console.error("Failed to upsert user from Clerk webhook:", err);
     const isDev = process.env.NODE_ENV === "development";
     const e = err as { name?: string; message?: string; stack?: string };
