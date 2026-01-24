@@ -78,6 +78,7 @@ export default function AnalysisForm() {
         throw new Error(data.error || data.details || "Analysis failed");
       }
 
+      window.dispatchEvent(new Event("credits:updated"));
       setResults(data);
     } catch (err) {
       console.error("Analysis error:", err);
@@ -160,7 +161,7 @@ export default function AnalysisForm() {
               </>
             ) : (
               <>
-                🎯 Analyze JobFit
+                🎯 Analyze Applivize
               </>
             )}
           </button>
@@ -213,7 +214,7 @@ export default function AnalysisForm() {
             </svg>
             <div>
               <h4 className="font-medium text-blue-900 dark:text-blue-100">
-                Analyzing your JobFit...
+                Analyzing your Applivize...
               </h4>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                 Extracting data and calculating match score. This may take a few moments.

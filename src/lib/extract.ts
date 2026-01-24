@@ -64,7 +64,10 @@ async function callGroqAPI(prompt: string): Promise<string> {
 }
 
 // --- UNIFIED CALLER ---
-async function callAI(prompt: string): Promise<string> {
+export let mockAIResponse: string | null = null;
+
+export async function callAI(prompt: string): Promise<string> {
+  if (mockAIResponse && prompt.includes("baseline-covered")) return mockAIResponse;
   const errors: string[] = [];
 
   // 1. Try Gemini (Primary)
@@ -120,7 +123,7 @@ function cleanJSON(text: string): string {
   return clean.trim();
 }
 
-function safeParseJSONObject(text: string): any {
+export function safeParseJSONObject(text: string): any {
   const cleaned = cleanJSON(text);
   try {
     return JSON.parse(cleaned);
@@ -201,6 +204,7 @@ interface ResumeExtractionResult {
     primary: string[];
     secondary: string[];
     tools: string[];
+    implied: string[];
   };
   projects: {
     name: string | null;
@@ -256,7 +260,8 @@ Extract resume information using the following JSON schema:
   "skills": {
     "primary": [],
     "secondary": [],
-    "tools": []
+    "tools": [],
+    "implied": []
   },
   "projects": [
     {
@@ -316,7 +321,8 @@ Return JSON only.`;
       skills: {
         primary: normalizeSkills(data.skills?.primary || []),
         secondary: normalizeSkills(data.skills?.secondary || []),
-        tools: normalizeSkills(data.skills?.tools || [])
+        tools: normalizeSkills(data.skills?.tools || []),
+        implied: normalizeSkills(data.skills?.implied || [])
       },
       projects: Array.isArray(data.projects) ? data.projects.map(p => ({
         name: p.name || null,
@@ -384,6 +390,7 @@ Return ONLY valid JSON.
 
 USER PROMPT (JOB DESCRIPTION)
 Extract job information using the following JSON schema:
+CRITICAL: For "educationLevel", look for keywords like "Diploma", "Bachelor", "BSc", "Masters", "PhD". If not explicitly mentioned, try to infer from the context but prioritize explicit mentions.
 
 {
   "job": {

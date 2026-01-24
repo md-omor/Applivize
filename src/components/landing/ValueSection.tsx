@@ -17,11 +17,11 @@ const values = [
 
 const ValueSection: React.FC = () => {
   return (
-    <section className="py-32 px-4 bg-white relative">
+    <section className="pb-32 px-4 bg-white relative">
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-20 items-center">
           <div className="order-2 lg:order-1">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-10 tracking-tighter leading-[0.95]">
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-10 tracking-tighter leading-[1.15] font-zalando">
               DESIGNED FOR <br />
               HIGH-IMPACT SEASONS.
             </h2>

@@ -1,17 +1,33 @@
 import { performAnalysisFlow } from "@/lib/analysis-flow";
+import { getOrCreateUser } from "@/lib/credits";
 import { parseFileFromFormData } from "@/lib/file-parser";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const DEFAULT_USER_ID = "demo-user1";
-
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let email: string | undefined;
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      const primary = user.emailAddresses?.find((e: { id: string }) => e.id === user.primaryEmailAddressId);
+      email = primary?.emailAddress ?? user.emailAddresses?.[0]?.emailAddress;
+    } catch {
+      // ignore
+    }
+
+    await getOrCreateUser(userId, email);
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const jobDescription = formData.get("jobDescription") as string;
-    const userIdFromForm = formData.get("userId") as string;
 
     // 1. Validate Input
     if (!file || !jobDescription) {
@@ -21,17 +37,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const targetUserId = userIdFromForm || DEFAULT_USER_ID;
-
     // 2. Extract Text from File
     let resumeText: string;
     try {
       const parseResult = await parseFileFromFormData(file);
       resumeText = parseResult.text;
-    } catch (error: any) {
+    } catch (error) {
       console.error("File Parsing Error:", error);
       return NextResponse.json(
-        { error: "INVALID_INPUT", details: error.message || "Failed to parse file" },
+        { error: "INVALID_INPUT", details: (error as Error).message || "Failed to parse file" },
         { status: 400 }
       );
     }
@@ -44,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Perform Analysis Flow
-    const result = await performAnalysisFlow(targetUserId, resumeText, jobDescription);
+    const result = await performAnalysisFlow(userId, resumeText, jobDescription);
 
     if (!result.success) {
       return NextResponse.json(

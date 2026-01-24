@@ -6,8 +6,8 @@ const path = require('path');
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 const uri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB || "jobfit";
-const DEMO_USER_ID = "demo-user";
+const dbName = process.env.MONGODB_DB || "applivize";
+const TEST_USER_ID = process.env.TEST_USER_ID || process.argv[2];
 
 const options = {
   tls: true,
@@ -17,6 +17,9 @@ const options = {
 async function testPhase3() {
     const client = new MongoClient(uri, options);
     try {
+        if (!TEST_USER_ID) {
+            throw new Error("Missing TEST_USER_ID. Provide via env TEST_USER_ID or as the first CLI argument.");
+        }
         await client.connect();
         console.log("Connected to MongoDB");
         const db = client.db(dbName);
@@ -25,15 +28,15 @@ async function testPhase3() {
 
         // 1. Reset Test User
         console.log("\n--- Testing User & Credits ---");
-        await users.deleteOne({ userId: DEMO_USER_ID });
-        console.log("Cleaned up demo-user for test.");
+        await users.deleteOne({ userId: TEST_USER_ID });
+        console.log(`Cleaned up test user for test: ${TEST_USER_ID}`);
 
         // Simulate getOrCreateUser
         await users.updateOne(
-            { userId: DEMO_USER_ID },
+            { userId: TEST_USER_ID },
             {
                 $setOnInsert: {
-                    userId: DEMO_USER_ID,
+                    userId: TEST_USER_ID,
                     creditsRemaining: 10,
                     creditsUsed: 0,
                     createdAt: new Date(),
@@ -43,7 +46,7 @@ async function testPhase3() {
             { upsert: true }
         );
 
-        let user = await users.findOne({ userId: DEMO_USER_ID });
+        let user = await users.findOne({ userId: TEST_USER_ID });
         console.log(`Initial Credits Remaining: ${user.creditsRemaining}`);
         console.log(`Initial Credits Used: ${user.creditsUsed}`);
 
@@ -55,14 +58,14 @@ async function testPhase3() {
         // 2. Simulate Credit Deduction
         console.log("\n--- Testing Credit Deduction ---");
         const deductionResult = await users.updateOne(
-            { userId: DEMO_USER_ID, creditsRemaining: { $gt: 0 } },
+            { userId: TEST_USER_ID, creditsRemaining: { $gt: 0 } },
             {
                 $inc: { creditsRemaining: -1, creditsUsed: 1 },
                 $set: { updatedAt: new Date() },
             }
         );
         
-        user = await users.findOne({ userId: DEMO_USER_ID });
+        user = await users.findOne({ userId: TEST_USER_ID });
         console.log(`After deduction - Remaining: ${user.creditsRemaining}, Used: ${user.creditsUsed}`);
 
         if (user.creditsRemaining === 9 && user.creditsUsed === 1) {
@@ -75,7 +78,7 @@ async function testPhase3() {
         // 3. Simulate Analysis Record Save
         console.log("\n--- Testing Analysis Record Save ---");
         const mockRecord = {
-            userId: DEMO_USER_ID,
+            userId: TEST_USER_ID,
             finalScore: 85,
             decision: "STRONG_FIT",
             scoreBreakdown: {

@@ -8,10 +8,10 @@ const Footer: React.FC = () => {
           <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center font-bold text-white text-lg">
             J
           </div>
-          <span className="font-bold text-xl text-slate-900 tracking-tight">JobFit</span>
+          <span className="font-bold text-xl text-slate-900 tracking-tight">Applivize</span>
         </div>
         <div className="text-slate-400 text-sm">
-          © {new Date().getFullYear()} JobFit. All rights reserved.
+          © {new Date().getFullYear()} Applivize. All rights reserved.
         </div>
       </div>
     </footer>

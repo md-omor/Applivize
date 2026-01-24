@@ -22,7 +22,7 @@ export function normalizeSkill(label: string): { label: string; key: string } {
 
 export interface ScoreWithStatus {
   score: number;
-  status: "MATCHED" | "PARTIAL" | "MISSING" | "NOT_REQUIRED";
+  status: "MATCHED" | "PARTIAL" | "MISSING" | "NOT_REQUIRED" | "NOT_EVALUATED";
 }
 
 export interface AnalysisBreakdown {
@@ -50,7 +50,16 @@ export interface AnalysisResponse {
   isHardCapped: boolean;
   breakdown: AnalysisBreakdown;
   missingSkills: string[];
+  impliedSkills: string[];
   notes: string[];
+  explanations: {
+    eligibility: string;
+    jobReality: string;
+    requiredSkills: string;
+    impliedSkills: string;
+    competition: string;
+    scoringNote: string;
+  };
   meta: {
     analysisVersion: string;
   };
@@ -108,6 +117,7 @@ export interface CandidateProfile {
     primary: string[];
     secondary: string[];
     tools: string[];
+    implied?: string[];
   };
 
   projects: {

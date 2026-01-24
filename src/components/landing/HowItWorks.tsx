@@ -36,27 +36,27 @@ const steps = [
 
 const HowItWorks: React.FC = () => {
   return (
-    <section className="py-32 px-4 relative overflow-hidden bg-slate-50/40">
+    <section id="how-it-works" className="py-32 px-4 relative overflow-hidden bg-slate-50/40">
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
       <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
       
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-20">
-          <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-4">Three steps to clarity.</h2>
-          <p className="text-lg text-slate-500 font-medium">Built for competitive job markets where every application counts.</p>
+          <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-4 font-zalando ">Three steps to clarity.</h2>
+          <p className="text-lg text-slate-500 font-medium font-zalando">Built for competitive job markets where every application counts.</p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
           {steps.map((step) => (
-            <Card key={step.number} className="p-10 border-none bg-white relative group overflow-hidden" hoverable>
+            <Card key={step.number} className="p-10 border-none bg-white relative group overflow-hidden " hoverable>
               <div className="absolute top-0 right-0 p-4 select-none opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
                 <span className="text-9xl font-black italic leading-none">{step.number}</span>
               </div>
               <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-white mb-8 shadow-lg shadow-slate-900/10">
                 {step.icon}
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4">{step.title}</h3>
-              <p className="text-slate-500 leading-relaxed font-medium">{step.description}</p>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 font-zalando">{step.title}</h3>
+              <p className="text-slate-500 leading-relaxed font-medium font-mono">{step.description}</p>
             </Card>
           ))}
         </div>

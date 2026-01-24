@@ -1,8 +1,8 @@
-# JobFit PDF Upload & Extraction Implementation Plan
+# Applivize PDF Upload & Extraction Implementation Plan
 
 ## Executive Summary
 
-This plan adds PDF and DOCX file upload capabilities to the JobFit platform, enabling users to upload their CV/resume and job descriptions as files instead of pasting text.
+This plan adds PDF and DOCX file upload capabilities to the Applivize platform, enabling users to upload their CV/resume and job descriptions as files instead of pasting text.
 
 ### Recommended Approach
 - **Server-side extraction** (more reliable, handles complex PDFs better)
@@ -151,7 +151,7 @@ Features:
 **File:** `src/app/page.tsx`
 
 Replace default Next.js template with:
-- JobFit branding/header
+- Applivize branding/header
 - Analysis form
 - Results section
 

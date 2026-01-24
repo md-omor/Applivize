@@ -1,15 +1,32 @@
 import { performAnalysisFlow } from "@/lib/analysis-flow";
+import { getOrCreateUser } from "@/lib/credits";
 import { AnalysisRequest } from "@/types/analysis";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const DEFAULT_USER_ID = "demo-user1";
-
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let email: string | undefined;
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      const primary = user.emailAddresses?.find((e: { id: string }) => e.id === user.primaryEmailAddressId);
+      email = primary?.emailAddress ?? user.emailAddresses?.[0]?.emailAddress;
+    } catch {
+      // ignore
+    }
+
+    await getOrCreateUser(userId, email);
+
     const body: AnalysisRequest = await request.json();
-    const { jobDescriptionText, resumeText, userId } = body;
+    const { jobDescriptionText, resumeText } = body;
 
     // 1. Validate Input
     if (!jobDescriptionText || !resumeText) {
@@ -22,10 +39,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const targetUserId = userId || DEFAULT_USER_ID;
-
     // 2. Perform Analysis Flow
-    const result = await performAnalysisFlow(targetUserId, resumeText, jobDescriptionText);
+    const result = await performAnalysisFlow(userId, resumeText, jobDescriptionText);
 
     if (!result.success) {
       return NextResponse.json(

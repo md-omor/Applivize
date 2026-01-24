@@ -1,5 +1,5 @@
 /**
- * File validation utilities for JobFit platform
+ * File validation utilities for Applivize platform
  */
 
 // Maximum file size: 10MB

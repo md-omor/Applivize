@@ -6,7 +6,7 @@ const path = require('path');
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 const uri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB || "jobfit";
+const dbName = process.env.MONGODB_DB || "applivize";
 const DUMMY_USER_ID = "user_dummy_123";
 
 async function testPhase3() {

@@ -79,129 +79,24 @@ export const parseFile = parseFileFromFormData;
  */
 async function parsePDF(buffer: Buffer): Promise<ParseResult> {
   try {
-    try {
-      let pdfjs: any;
-      try {
-        pdfjs = require("pdfjs-dist/legacy/build/pdf.js");
-      } catch {
-        pdfjs = require("pdfjs-dist/build/pdf.js");
-      }
-
-      if (pdfjs?.GlobalWorkerOptions) {
-        try {
-          pdfjs.GlobalWorkerOptions.workerSrc = require.resolve(
-            "pdfjs-dist/legacy/build/pdf.worker.js"
-          );
-        } catch {
-          pdfjs.GlobalWorkerOptions.workerSrc = "";
-        }
-      }
-
-      const loadingTask = pdfjs.getDocument({ data: buffer, disableWorker: true });
-      const pdf = await loadingTask.promise;
-
-      const numPages: number = pdf.numPages;
-      const pageTexts: string[] = [];
-
-      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const content = await page.getTextContent();
-
-        const strings: string[] = [];
-        let lastY: number | null = null;
-
-        for (const item of content.items as any[]) {
-          const str = typeof item?.str === "string" ? item.str : "";
-          if (!str) continue;
-
-          const y = Array.isArray(item?.transform) ? item.transform[5] : null;
-          if (typeof y === "number" && lastY !== null && Math.abs(y - lastY) > 2) {
-            strings.push("\n");
-          }
-          lastY = typeof y === "number" ? y : lastY;
-          strings.push(str);
-        }
-
-        pageTexts.push(strings.join(" "));
-      }
-
-      let text = pageTexts.join("\n\n");
-
-      text = text
-        .replace(/\u0000/g, "")
-        .replace(/\f/g, "\n")
-        .replace(/\r/g, "")
-        .replace(/-\n(?=[a-zA-Z])/g, "")
-        .replace(/[ \t]+\n/g, "\n")
-        .replace(/\n[ \t]+/g, "\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .replace(/[ \t]{2,}/g, " ")
-        .trim();
-
-      if (!text) {
-        throw { code: "EMPTY_CONTENT", message: "PDF contains no extractable text" };
-      }
-
-      return {
-        text,
-        metadata: {
-          pages: numPages,
-          wordCount: text.split(/\s+/).filter(Boolean).length,
-          fileType: "pdf",
-        },
-      };
-    } catch {
-      // Fall back to pdf-parse below
+    const pdfModule: any = require("pdf-parse");
+    
+    // In pdf-parse v2.4.5, we use the PDFParse class
+    const PDFParseClass = pdfModule.PDFParse;
+    
+    if (!PDFParseClass) {
+      throw new Error("Unable to resolve PDFParse class from pdf-parse module");
     }
 
-    let pdfModule: any;
-    try {
-      pdfModule = require("pdf-parse/dist/pdf-parse/cjs/index.cjs");
-    } catch {
-      pdfModule = require("pdf-parse");
-    }
-
-    const PDFParseExport =
-      typeof pdfModule === "function"
-        ? pdfModule
-        : pdfModule?.PDFParse
-        ? pdfModule.PDFParse
-        : pdfModule?.default && typeof pdfModule.default === "function"
-        ? pdfModule.default
-        : pdfModule?.default?.PDFParse
-        ? pdfModule.default.PDFParse
-        : pdfModule?.parse && typeof pdfModule.parse === "function"
-        ? pdfModule.parse
-        : null;
-
-    if (!PDFParseExport) {
-      throw new Error("Unable to resolve pdf-parse export");
-    }
-
-    let text = "";
-    let pages = undefined;
-
-    const isClassLike =
-      typeof PDFParseExport === "function" &&
-      typeof (PDFParseExport as any).prototype?.getText === "function";
-
-    // CASE 1: pdf-parse exports a CLASS (newer versions)
-    if (isClassLike) {
-      const parser = new (PDFParseExport as any)({
-        data: buffer,
-        disableWorker: true,
-      } as any);
-
-      const result = await parser.getText();
-      text = result.text || "";
-      pages = result.total;
-    }
-    // CASE 2: pdf-parse exports a FUNCTION (older versions)
-    else {
-      const result = await (PDFParseExport as any)(buffer, { disableWorker: true });
-      text = result.text || "";
-      pages = result.numpages;
-    }
+    const parser = new PDFParseClass({
+      data: buffer,
+      verbosity: 0, // Minimize logs
+    });
+    
+    // getText() returns a TextResult object with a .text property
+    const result = await parser.getText();
+    let text = result?.text || "";
+    const pages = result?.pages?.length || 0;
 
     text = text
       .replace(/\u0000/g, "")
@@ -217,6 +112,9 @@ async function parsePDF(buffer: Buffer): Promise<ParseResult> {
     if (!text) {
       throw { code: "EMPTY_CONTENT", message: "PDF contains no extractable text" };
     }
+
+    // Clean up
+    await parser.destroy();
 
     return {
       text,

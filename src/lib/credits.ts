@@ -9,38 +9,40 @@ function asFiniteNumber(value: unknown): number | null {
 
 async function getUsersCollection() {
   const client = await clientPromise;
-  const db = client.db(process.env.MONGODB_DB || "jobfit");
+  const db = client.db(process.env.MONGODB_DB || "applivize");
   return db.collection<UserAccount>("users");
 }
 
 /**
  * Gets a user or creates a new one with 10 initial credits
  */
-export async function getOrCreateUser(userId: string): Promise<UserAccount> {
+export async function getOrCreateUser(userId: string, email?: string): Promise<UserAccount> {
   const users = await getUsersCollection();
+
+  const setFields: Record<string, unknown> = { updatedAt: new Date() };
+  if (typeof email === "string" && email.length > 0) {
+    setFields.email = email;
+  }
 
   const result = (await users.findOneAndUpdate(
     { userId },
     {
       $setOnInsert: {
         userId,
-        totalCredits: INITIAL_CREDITS,
-        usedCredits: 0,
-        remainingCredits: INITIAL_CREDITS,
         creditsTotal: INITIAL_CREDITS,
         creditsUsed: 0,
         creditsRemaining: INITIAL_CREDITS,
         createdAt: new Date(),
       },
-      $set: { updatedAt: new Date() },
+      $set: setFields,
     },
     { upsert: true, returnDocument: "after" }
   )) as any;
 
-  const user = (result?.value ?? result) as (UserAccount & {
-    creditsRemaining?: number;
-    creditsUsed?: number;
-    creditsTotal?: number;
+  const user = (result?.value ?? result) as (Partial<UserAccount> & {
+    remainingCredits?: number;
+    usedCredits?: number;
+    totalCredits?: number;
     createdAt?: Date;
     updatedAt?: Date;
   }) | null;
@@ -48,49 +50,59 @@ export async function getOrCreateUser(userId: string): Promise<UserAccount> {
     throw new Error("Failed to get or create user account");
   }
 
-  const remA = asFiniteNumber(user.remainingCredits);
-  const remB = asFiniteNumber(user.creditsRemaining);
-  const remainingCredits =
+  const remA = asFiniteNumber(user.creditsRemaining);
+  const remB = asFiniteNumber(user.remainingCredits);
+  const creditsRemaining =
     remA == null && remB == null ? INITIAL_CREDITS : remA == null ? (remB as number) : remB == null ? remA : Math.max(remA, remB);
 
-  const usedA = asFiniteNumber(user.usedCredits);
-  const usedB = asFiniteNumber(user.creditsUsed);
-  const usedCredits = usedA == null && usedB == null ? 0 : usedA == null ? (usedB as number) : usedB == null ? usedA : Math.max(usedA, usedB);
+  const usedA = asFiniteNumber(user.creditsUsed);
+  const usedB = asFiniteNumber(user.usedCredits);
+  const creditsUsed = usedA == null && usedB == null ? 0 : usedA == null ? (usedB as number) : usedB == null ? usedA : Math.max(usedA, usedB);
 
-  const totalA = asFiniteNumber(user.totalCredits);
-  const totalB = asFiniteNumber(user.creditsTotal);
-  const totalCredits =
-    totalA == null && totalB == null ? remainingCredits + usedCredits : totalA == null ? (totalB as number) : totalB == null ? totalA : Math.max(totalA, totalB);
+  const totalA = asFiniteNumber(user.creditsTotal);
+  const totalB = asFiniteNumber(user.totalCredits);
+  const creditsTotal =
+    totalA == null && totalB == null
+      ? creditsRemaining + creditsUsed
+      : totalA == null
+        ? (totalB as number)
+        : totalB == null
+          ? totalA
+          : Math.max(totalA, totalB);
 
   if (
-    user.remainingCredits !== remainingCredits ||
-    user.usedCredits !== usedCredits ||
-    user.totalCredits !== totalCredits ||
-    user.creditsRemaining !== remainingCredits ||
-    user.creditsUsed !== usedCredits ||
-    user.creditsTotal !== totalCredits
+    user.creditsRemaining !== creditsRemaining ||
+    user.creditsUsed !== creditsUsed ||
+    user.creditsTotal !== creditsTotal ||
+    user.remainingCredits != null ||
+    user.usedCredits != null ||
+    user.totalCredits != null
   ) {
     await users.updateOne(
       { userId },
       {
         $set: {
-          remainingCredits,
-          usedCredits,
-          totalCredits,
-          creditsRemaining: remainingCredits,
-          creditsUsed: usedCredits,
-          creditsTotal: totalCredits,
+          creditsRemaining,
+          creditsUsed,
+          creditsTotal,
           updatedAt: new Date(),
+        },
+        $unset: {
+          remainingCredits: "",
+          usedCredits: "",
+          totalCredits: "",
         },
       }
     );
   }
 
   return {
-    ...(user as any),
-    remainingCredits,
-    usedCredits,
-    totalCredits,
+    userId: user.userId ?? userId,
+    email: (typeof email === "string" && email.length > 0 ? email : user.email) as any,
+    creditsRemaining,
+    creditsUsed,
+    creditsTotal,
+    createdAt: (user.createdAt ?? new Date()) as any,
     updatedAt: new Date(),
   } as UserAccount;
 }
@@ -100,7 +112,7 @@ export async function getOrCreateUser(userId: string): Promise<UserAccount> {
  */
 export async function hasCredits(userId: string): Promise<boolean> {
   const user = await getOrCreateUser(userId);
-  return user.remainingCredits > 0;
+  return user.creditsRemaining > 0;
 }
 
 /**
@@ -114,12 +126,10 @@ export async function deductCredit(userId: string): Promise<{ success: boolean; 
   const res = await users.updateOne(
     {
       userId,
-      $or: [{ remainingCredits: { $gt: 0 } }, { creditsRemaining: { $gt: 0 } }],
+      creditsRemaining: { $gt: 0 },
     },
     {
       $inc: {
-        remainingCredits: -1,
-        usedCredits: 1,
         creditsRemaining: -1,
         creditsUsed: 1,
       },

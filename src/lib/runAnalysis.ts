@@ -40,29 +40,40 @@ export async function runAnalysis(
     }
 
     // 2. Match Logic
-    const { breakdown, missingSkills, notes } = matchJobWithCandidate(
+    const likelySkills = Array.isArray(skillUnderstanding?.likelySkills) ? skillUnderstanding.likelySkills : [];
+    
+    const { breakdown, missingSkills, impliedSkills, notes } = matchJobWithCandidate(
       jobRequirements,
-      candidateProfile
+      candidateProfile,
+      likelySkills,
+      resumeText
     );
 
-    const filteredMissingSkills =
-      likelyKeys.size === 0 ? missingSkills : missingSkills.filter((m) => !shouldSuppressMissingSkill(m, likelyKeys));
+    // 2.5. AI Baseline Skill Normalization (New Step)
+    // Remove "baseline covered" skills from missingSkills list (but do not change score)
+    if (missingSkills.length > 0) {
+      const { normalizeBaselineSkills } = await import("./ai-baseline-skill-normalizer");
+      const { baselineCoveredSkills, remainingMissingSkills } = await normalizeBaselineSkills(
+        candidateProfile.skills.primary,
+        impliedSkills,
+        missingSkills
+      );
 
-    const adjustedNotes = (() => {
-      const out = [...notes];
-      const idx = out.findIndex((n) => /^Missing\s+\d+\s+required\s+skill/.test(n));
-      if (idx !== -1) {
-        const n = filteredMissingSkills.length;
-        out[idx] = `Missing ${n} required skill${n !== 1 ? "s" : ""}`;
+      // Update missingSkills to only show truly missing ones
+      missingSkills.length = 0; // Clear array
+      missingSkills.push(...remainingMissingSkills);
+
+      // Add baseline covered skills to impliedSkills for visibility (optional)
+      baselineCoveredSkills.forEach(s => {
+        if (!impliedSkills.includes(s)) {
+          impliedSkills.push(s);
+        }
+      });
+      
+      if (baselineCoveredSkills.length > 0) {
+         notes.push(`Baseline Skills: ${baselineCoveredSkills.length} prerequisite skill${baselineCoveredSkills.length > 1 ? 's' : ''} assumed covered (not listed as missing).`);
       }
-
-      const suppressedCount = missingSkills.length - filteredMissingSkills.length;
-      if (suppressedCount > 0) {
-        out.push(`Baseline: Suppressed ${suppressedCount} likely skill${suppressedCount !== 1 ? "s" : ""} from missing list.`);
-      }
-
-      return out;
-    })();
+    }
 
     // 3. Calculate Final Score
     const finalScore = calculateFinalScore(breakdown);
@@ -71,13 +82,28 @@ export async function runAnalysis(
     const decision = getDecision(finalScore);
 
     // 5. Construct Response satisfying the user requested schema
+    const explanations = {
+      eligibility: breakdown.eligibility.status === "NOT_EVALUATED"
+        ? "Eligibility checks whether the job has any strict requirements that would automatically disqualify you (visa, location, age, mandatory certification). For this job, eligibility was not evaluated; the eligibility score is a placeholder and does not affect your final score."
+        : "Eligibility checks whether the job has any strict requirements that would automatically disqualify you (visa, location, age, mandatory certification).",
+      jobReality: breakdown.isHardCapped
+        ? "Job Reality measures how closely your background matches the core focus of this role (role alignment, not personal ability). A significant mismatch in core requirements was detected, so the final score is capped to reflect alignment to this role, not your overall potential."
+        : "Job Reality measures how closely your background matches the core focus of this role (role alignment, not personal ability). Lower values usually mean the job’s main requirements don’t strongly overlap with what is shown in the resume.",
+      requiredSkills: "Missing skills lists required skills that were not explicitly found in the resume text. Required skills reflects coverage of the job’s required skills based on what is explicitly present in the resume.",
+      impliedSkills: "Implied skills are high-confidence inferred skills shown for context only. They do not affect scoring, missing skills, or any caps (and this list may be empty even for strong candidates).",
+      competition: "Competition analysis is not available for this role yet. A value of 0 means it was not evaluated (not that there are no competitors).",
+      scoringNote: "Scores represent alignment with this specific role, not your overall ability or potential. Lower scores indicate weaker alignment to this job’s requirements, not poor performance."
+    };
+
     return {
       finalScore,
       decision,
       isHardCapped: breakdown.isHardCapped,
       breakdown,
-      missingSkills: filteredMissingSkills,
-      notes: adjustedNotes,
+      missingSkills,
+      impliedSkills,
+      notes,
+      explanations,
       meta: {
         analysisVersion: "v1"
       }

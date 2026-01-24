@@ -12,7 +12,7 @@ type CookieToSet = {
   };
 };
 
-const COOKIE_NAME = "jobfit_uid";
+const COOKIE_NAME = "applivize_uid";
 
 function getCookieValue(cookieHeader: string, name: string): string | null {
   const parts = cookieHeader.split(";").map((p) => p.trim());

@@ -15,9 +15,10 @@ export type AnalysisRecord = Analysis;
 
 export interface UserAccount {
   userId: string;
-  totalCredits: number;
-  usedCredits: number;
-  remainingCredits: number;
+  email?: string;
+  creditsTotal: number;
+  creditsUsed: number;
+  creditsRemaining: number;
   createdAt: Date;
   updatedAt: Date;
 }

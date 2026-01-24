@@ -6,7 +6,7 @@ interface MissingSkillsProps {
 
 const MissingSkills: React.FC<MissingSkillsProps> = ({ skills }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-zalando">
       <h2 className="text-2xl font-black text-slate-900 tracking-tight">Missing Critical Signals</h2>
       {skills.length > 0 ? (
         <div className="flex flex-wrap gap-3">

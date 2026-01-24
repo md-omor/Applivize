@@ -13,8 +13,8 @@ export async function performAnalysisFlow(
   const user = await getOrCreateUser(userId);
 
   // 2. Check Credits BEFORE
-  if (user.remainingCredits <= 0) {
-    console.info("NO_CREDITS", { userId, remainingCredits: user.remainingCredits });
+  if (user.creditsRemaining <= 0) {
+    console.info("NO_CREDITS", { userId, creditsRemaining: user.creditsRemaining });
     return { success: false, error: "NO_CREDITS", status: 403 };
   }
 
@@ -24,7 +24,7 @@ export async function performAnalysisFlow(
 
     // 4. Save Analysis Result to DB
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB || "jobfit");
+    const db = client.db(process.env.MONGODB_DB || "applivize");
     const records = db.collection<AnalysisRecord>("analysis_records");
 
     const record: AnalysisRecord = {

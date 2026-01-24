@@ -1,80 +1,179 @@
+"use client";
+
 import DecisionHeader from '@/components/result/DecisionHeader';
+import ImpliedSkills from '@/components/result/ImpliedSkills';
 import MissingSkills from '@/components/result/MissingSkills';
 import RecruiterNotes from '@/components/result/RecruiterNotes';
 import ScoreBreakdown from '@/components/result/ScoreBreakdown';
 import Button from '@/components/shared/Button';
 import Card from '@/components/shared/Card';
+import { AnalysisResponse } from '@/types/analysis';
 import Link from 'next/link';
-
-// Placeholder data
-const MOCK_RESULT = {
-  decision: 'APPLY WITH IMPROVEMENTS' as const,
-  score: 68,
-  breakdown: [
-    { label: 'Required Skills', score: 75 },
-    { label: 'Experience Level', score: 62 },
-    { label: 'Education Match', score: 90 },
-    { label: 'Tool Mastery', score: 45 },
-    { label: 'Eligibility', score: 100 },
-  ],
-  missingSkills: ['Distributed Systems', 'Go/Golang', 'Kubernetes Architecture', 'gRPC Framework'],
-  notes: [
-    "Candidate shows strong generalist profile but lacks specialized depth in high-scale infrastructure.",
-    "Resume mentions 'Microservices' but lacks specific implementation details with Kubernetes.",
-    "Recommend adding specific Go projects to the resume to meet technical filtering bars.",
-    "Education background exceeds requirements, providing a solid theoretical foundation."
-  ]
-};
+import { useEffect, useState } from 'react';
 
 export default function ResultPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="container mx-auto px-4 py-8 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center font-bold text-white text-lg group-hover:bg-slate-800 transition-colors">
-            J
-          </div>
-          <span className="font-bold text-xl text-slate-900 tracking-tight">JobFit</span>
-        </Link>
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event("credits:updated"));
+    const raw = localStorage.getItem("last_analysis_result");
+    if (raw) {
+      try {
+        const parsed: AnalysisResponse = JSON.parse(raw);
+        
+        // Map API response to UI component expected format
+        const mappedResult = {
+          decision: mapDecision(parsed.decision),
+          score: parsed.finalScore,
+          breakdown: [
+            { label: 'Required Skills', score: parsed.breakdown.requiredSkills, explanation: parsed.explanations?.requiredSkills },
+            { label: 'Experience Level', score: parsed.breakdown.experience },
+            { label: 'Education Match', score: parsed.breakdown.education?.score || 0, status: parsed.breakdown.education?.status },
+            { label: 'Tool Mastery', score: parsed.breakdown.tools },
+            { label: 'Eligibility', score: parsed.breakdown.eligibility?.score || 0, status: parsed.breakdown.eligibility?.status, explanation: parsed.explanations?.eligibility },
+          ],
+          missingSkills: parsed.missingSkills,
+          impliedSkills: parsed.impliedSkills || [],
+          notes: parsed.notes,
+          explanations: parsed.explanations,
+        };
+        
+        setResult(mappedResult);
+      } catch (e) {
+        console.error("Failed to parse analysis result", e);
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const getActionTip = () => {
+    if (!result) return null;
+
+    // 1. HIGH MATCH (85+)
+    if (result.score >= 85) {
+      return {
+        title: "NEXT STEPS: INTERVIEW READY",
+        message: "Your profile is a near-perfect match. Focus on quantifying your impact during interviews and preparing for behavioral questions.",
+        buttonText: "Join Prep Community",
+        action: () => window.open('https://discord.gg/applivize', '_blank')
+      };
+    }
+
+    // 2. MISSING CRITICAL SKILLS
+    if (result.missingSkills && result.missingSkills.length > 0) {
+      const topSkill = result.missingSkills[0];
+      return {
+        title: "ACTION: NARRATIVE OPTIMIZATION",
+        message: (
+          <>
+            Instead of just listing <span className="text-indigo-600">"{topSkill}"</span>, add a specific bullet point in your experience section that shows how you applied it to solve a problem.
+          </>
+        ),
+        buttonText: "See Missing Skills",
+        action: () => document.getElementById('missing-skills-section')?.scrollIntoView({ behavior: 'smooth' })
+      };
+    }
+
+    // 3. EXPERIENCE BIAS (High skills, but maybe low experience score)
+    const expScore = result.breakdown.find((b: any) => b.label === 'Experience Level')?.score || 0;
+    if (expScore < 70) {
+      return {
+        title: "ACTION: EXPERIENCE BRIDGING",
+        message: "Highlight relevant side projects or open-source contributions to bridge the gap if your formal work history doesn't meet the year requirements.",
+        buttonText: "Refine Resume",
+        action: () => window.location.href = '/upload'
+      };
+    }
+
+    // Default Impact Tip
+    return {
+      title: "BOOST YOUR IMPACT",
+      message: "Our analysis suggests adding more 'Result-Driven' language. Focus on using Action Verbs followed by quantified metrics (e.g., 'Increased efficiency by 20%').",
+      buttonText: "Refine Resume",
+      action: () => window.location.href = '/upload'
+    };
+  };
+
+  const actionTip = getActionTip();
+
+  function mapDecision(apiDecision: string): 'APPLY' | 'APPLY WITH IMPROVEMENTS' | 'IMPROVE' | 'SKIP' {
+    switch (apiDecision) {
+      case 'PASS': return 'APPLY';
+      case 'IMPROVE': return 'APPLY WITH IMPROVEMENTS';
+      case 'REJECT': return 'SKIP';
+      default: return 'IMPROVE';
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-slate-100 border-t-slate-900 animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!result) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+        <h1 className="text-3xl font-black mb-4">No Analysis Found</h1>
+        <p className="text-slate-500 mb-8 max-w-md">We couldn't find your recent analysis data. Please start a new session.</p>
         <Link href="/upload">
-          <Button variant="secondary" size="sm" className="font-bold">
-            NEW ANALYSIS
-          </Button>
+          <Button size="lg">NEW ANALYSIS</Button>
         </Link>
-      </nav>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white font-zalando">
+
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
-        <DecisionHeader decision={MOCK_RESULT.decision} score={MOCK_RESULT.score} />
+        <DecisionHeader decision={result.decision} score={result.score} />
         
         <div className="grid lg:grid-cols-2 gap-16 mt-16">
           <div className="space-y-16">
-            <ScoreBreakdown breakdown={MOCK_RESULT.breakdown} />
-            <MissingSkills skills={MOCK_RESULT.missingSkills} />
+            <ScoreBreakdown breakdown={result.breakdown} />
+            <div id="missing-skills-section">
+              <MissingSkills skills={result.missingSkills} />
+            </div>
+            
+            {result.impliedSkills && result.impliedSkills.length > 0 && (
+              <div className="pt-8 border-t border-slate-50">
+                <ImpliedSkills skills={result.impliedSkills} missingSkills={result.missingSkills} />
+              </div>
+            )}
           </div>
           
           <div className="space-y-12">
-            <RecruiterNotes notes={MOCK_RESULT.notes} />
-            
-            <Card className="p-10 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl -mr-16 -mt-16 group-hover:bg-white/10 transition-colors"></div>
-              <h3 className="text-xl font-black mb-4 tracking-tight">IMPROVE YOUR SCORE</h3>
-              <p className="text-slate-400 font-medium mb-8 leading-relaxed">
-                Our analysis suggests that adding specific mentions of "Cloud Native Patterns" could increase your score by up to 12 points.
+            <RecruiterNotes notes={result.notes} />
+
+            <Card className="p-10 bg-white border border-slate-100 shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-50/50 transition-colors"></div>
+              
+              <h3 className="text-xl font-black mb-4 tracking-tight text-slate-900">{actionTip?.title}</h3>
+              <p className="text-slate-500 font-medium leading-relaxed text-lg">
+                {actionTip?.message}
               </p>
-              <Button size="lg" className="w-full bg-white text-slate-900 hover:bg-slate-100 py-6 text-lg">
-                View Tailored Tips
-              </Button>
             </Card>
           </div>
         </div>
-      </main>
 
-      <footer className="mt-20 py-12 border-t border-slate-100 text-center">
-        <p className="text-slate-400 text-xs font-black tracking-widest uppercase">
-          Confidential AI Signal Analysis • JobFit Pro 2026
-        </p>
-      </footer>
+        {/* Bottom CTA Section */}
+        <div className="text-center space-y-8 py-20 border-t border-slate-50">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">STILL WANT TO CHECK ANOTHER?</h2>
+            <p className="text-slate-400 font-medium">Upload a different job description or update your resume for better results.</p>
+          </div>
+          <Link href="/upload" className="inline-block">
+            <Button size="lg" className="px-16 py-8 text-xl rounded-2xl shadow-2xl hover:scale-105 transition-transform cursor-pointer">
+              NEW ANALYSIS
+            </Button>
+          </Link>
+        </div>
+      </main>
     </div>
   );
 }

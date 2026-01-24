@@ -1,28 +1,27 @@
-import Footer from "@/components/landing/Footer";
+import EmpathySection from "@/components/landing/EmpathySection";
 import Hero from "@/components/landing/Hero";
+import HeroSupport from "@/components/landing/HeroSupport";
 import HowItWorks from "@/components/landing/HowItWorks";
+import HowItWorksExtended from "@/components/landing/HowItWorksExtended";
+import ScoringLogicSection from "@/components/landing/ScoringLogicSection";
+import TrustSection from "@/components/landing/TrustSection";
 import ValueSection from "@/components/landing/ValueSection";
+import WhyThisPlatform from "@/components/landing/WhyThisPlatform";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white selection:bg-slate-200">
-      {/* Navigation - Minimal */}
-      <nav className="container mx-auto px-4 py-8 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center font-bold text-white text-lg uppercase">
-            J
-          </div>
-          <span className="font-bold text-xl text-slate-900 tracking-tight">JobFit</span>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-white" id="home-v2">
       <main>
         <Hero />
         <HowItWorks />
+        <ScoringLogicSection />
+        <HeroSupport />
         <ValueSection />
+        <HowItWorksExtended />
+        <EmpathySection />
+        <WhyThisPlatform />
+        <TrustSection />
       </main>
-
-      <Footer />
     </div>
   );
 }

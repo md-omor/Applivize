@@ -151,7 +151,7 @@ export default function AnalysisResults({
               </h2>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              Your JobFit Score
+              Your Applivize Score
             </p>
           </div>
           <CircularScore score={finalScore} />

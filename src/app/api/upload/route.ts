@@ -45,9 +45,9 @@ export async function POST(request: Request): Promise<NextResponse<UploadRespons
       text: result.text,
       metadata: {
         filename: file.name,
-        pages: result.metadata.pages,
-        wordCount: result.metadata.wordCount,
-        fileType: result.metadata.fileType,
+        pages: result.metadata?.pages || 0,
+        wordCount: result.metadata?.wordCount || 0,
+        fileType: result.metadata?.fileType || "unknown",
       },
     });
   } catch (error) {
