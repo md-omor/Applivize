@@ -1,4 +1,5 @@
-import { getOrCreateUser } from "@/lib/credits";
+import { deleteUser, getOrCreateUser } from "@/lib/credits";
+import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
   }
 
   const eventType = event?.type;
-  if (eventType !== "user.created" && eventType !== "user.updated") {
+  if (eventType !== "user.created" && eventType !== "user.updated" && eventType !== "user.deleted") {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
@@ -70,10 +71,46 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
+  if (eventType === "user.deleted") {
+    try {
+      await deleteUser(userId);
+    } catch (err) {
+      console.error("Failed to delete user from Clerk webhook:", err);
+      const isDev = process.env.NODE_ENV === "development";
+      const e = err as { name?: string; message?: string; stack?: string };
+      return NextResponse.json(
+        {
+          error: "DELETE_FAILED",
+          ...(isDev
+            ? {
+                name: e?.name,
+                message: e?.message,
+                stack: e?.stack,
+              }
+            : {}),
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
   const emails = event?.data?.email_addresses ?? [];
   const primaryId = event?.data?.primary_email_address_id ?? null;
   const primary = primaryId ? emails.find((e) => e.id === primaryId) : undefined;
-  const email = primary?.email_address ?? emails[0]?.email_address;
+  let email = primary?.email_address ?? emails[0]?.email_address;
+
+  if (!email) {
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      const primaryEmail = user.emailAddresses?.find((e: { id: string }) => e.id === user.primaryEmailAddressId);
+      email = primaryEmail?.emailAddress ?? user.emailAddresses?.[0]?.emailAddress;
+    } catch (err) {
+      console.warn("Failed to fetch user email from Clerk:", err);
+    }
+  }
 
   try {
     await getOrCreateUser(userId, email);
