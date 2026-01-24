@@ -151,13 +151,22 @@ export async function POST(request: Request) {
   try {
     await getOrCreateUser(userId, email);
   } catch (err) {
-    console.error("Clerk webhook Mongo context:", {
+    const mongoUri = process.env.MONGODB_URI || "";
+    const protocol = mongoUri.split("://")[0];
+    
+    console.error("Clerk webhook MongoDB error - Environment Context:", {
       vercelEnv: process.env.VERCEL_ENV,
       nodeEnv: process.env.NODE_ENV,
       mongodbDb: process.env.MONGODB_DB,
-      hasMongoUri: Boolean(process.env.MONGODB_URI),
+      hasMongoUri: Boolean(mongoUri),
+      uriProtocol: protocol,
+      isAtlasSrv: protocol === "mongodb+srv",
+      hasCredentials: mongoUri.includes("@"),
+      userId,
+      hasEmail: Boolean(email),
     });
     console.error("Failed to upsert user from Clerk webhook:", err);
+    
     const isDev = process.env.NODE_ENV === "development";
     const e = err as { name?: string; message?: string; stack?: string };
     return NextResponse.json(
@@ -165,6 +174,7 @@ export async function POST(request: Request) {
         error: "UPSERT_FAILED",
         name: e?.name,
         message: e?.message,
+        hint: protocol !== "mongodb+srv" ? "Connection string should use mongodb+srv:// for Atlas" : undefined,
         ...(isDev ? { stack: e?.stack } : {}),
       },
       { status: 500 }

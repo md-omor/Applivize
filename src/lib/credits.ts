@@ -8,9 +8,20 @@ function asFiniteNumber(value: unknown): number | null {
 }
 
 async function getUsersCollection() {
-  const client = await clientPromise;
-  const db = client.db(process.env.MONGODB_DB || "applivize");
-  return db.collection<UserAccount>("users");
+  try {
+    const client = await clientPromise;
+    const db = client.db(process.env.MONGODB_DB || "applivize");
+    return db.collection<UserAccount>("users");
+  } catch (err) {
+    const error = err as Error;
+    console.error("Failed to get MongoDB users collection:", {
+      error: error.message,
+      name: error.name,
+      mongodbDb: process.env.MONGODB_DB,
+      hasMongoUri: Boolean(process.env.MONGODB_URI),
+    });
+    throw new Error(`MongoDB connection failed: ${error.message}`);
+  }
 }
 
 export async function deleteUser(userId: string): Promise<void> {
