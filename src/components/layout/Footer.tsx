@@ -1,4 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
+
+import logo from "@/assets/logo3.png";
 
 const GlobalFooter = () => {
   return (
@@ -8,13 +11,20 @@ const GlobalFooter = () => {
           {/* Brand & Description */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center font-bold text-white text-lg uppercase">
-                R
-              </div>
-              <span className="font-bold text-xl text-slate-900 tracking-tight">Rielor</span>
+              <div className=" h-8 sm:h-10">
+            <Image
+              src={logo}
+              alt="Rielor logo"
+              priority
+              className="w-full h-full object-contain"
+            />
+          </div>
+            <span className="font-bold text-xl sm:text-2xl text-slate-900 tracking-tighter whitespace-nowrap">
+              Rielor <span className="text-[10px] text-red-500">BETA</span>
+            </span>
             </Link>
             <p className="text-slate-500 max-w-sm text-sm leading-relaxed">
-              Empowering job seekers with AI-driven insights. Understand your alignment with any job description and optimize your resume for success.
+              Empowering job seekers with Evidence-driven insights. Understand your alignment with any job description and optimize your resume for success.
             </p>
           </div>
 
@@ -42,7 +52,7 @@ const GlobalFooter = () => {
         {/* Bottom Bar */}
         <div className="border-t border-slate-200 pt-8 flex flex-col md:row justify-between items-center gap-4">
           <p className="text-slate-400 text-xs">
-            © {new Date().getFullYear()} Rielor AI. All rights reserved.
+            © {new Date().getFullYear()} Rielor. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <span className="text-slate-400 text-xs">Built for professionals</span>
