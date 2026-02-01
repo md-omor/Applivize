@@ -11,23 +11,23 @@ interface ScoreBreakdownProps {
 
 const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ breakdown }) => {
   return (
-    <div className="space-y-8 font-zalando text-slate-900">
-      <h2 className="text-2xl font-black tracking-tight">Signal Strengths</h2>
-      <div className="grid gap-8">
+    <div className="space-y-6 sm:space-y-8 font-zalando text-slate-900">
+      <h2 className="text-xl sm:text-2xl font-black tracking-tight">Signal Strengths</h2>
+      <div className="grid gap-6 sm:gap-8">
         {breakdown.map((item) => (
           <div key={item.label} className="space-y-3">
-            <div className="flex justify-between items-center h-6">
-              <div className="flex items-center gap-3">
-                <span title={item.explanation} className="text-sm font-black tracking-widest uppercase">{item.label}</span>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <span title={item.explanation} className="text-[11px] sm:text-sm font-black tracking-widest uppercase break-words">{item.label}</span>
                 {item.status && item.status !== 'MATCHED' && item.status !== 'NOT_REQUIRED' && (
-                  <span title={item.explanation} className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-black tracking-widest uppercase text-slate-500">
+                  <span title={item.explanation} className="px-2 py-0.5 bg-slate-100 rounded text-[9px] sm:text-[10px] font-black tracking-widest uppercase text-slate-500">
                     {item.status.replace(/_/g, ' ')}
                   </span>
                 )}
               </div>
-              <span className="text-lg font-black">{item.score}%</span>
+              <span className="text-base sm:text-lg font-black">{item.score}%</span>
             </div>
-            <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner border border-slate-200/50">
+            <div className="h-3 sm:h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner border border-slate-200/50">
               <div 
                 className="h-full bg-slate-900 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)]"
                 style={{ width: `${item.score}%` }}

@@ -51,9 +51,9 @@ function ScoreBar({ score, label, status }: { score: number; label: string; stat
   
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <div className="flex gap-2 items-center">
-          <span className="text-gray-600 dark:text-gray-400">{label}</span>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
+        <div className="flex gap-2 items-center min-w-0">
+          <span className="text-gray-600 dark:text-gray-400 break-words">{label}</span>
           {status && (
             <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${
               status === "MATCHED" ? "bg-green-100 text-green-700" :
@@ -97,8 +97,8 @@ function CircularScore({ score }: { score: number }) {
   };
 
   return (
-    <div className="relative w-32 h-32">
-      <svg className="w-full h-full transform -rotate-90">
+    <div className="relative w-24 h-24 sm:w-32 sm:h-32">
+      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
         <circle
           cx="64"
           cy="64"
@@ -122,7 +122,7 @@ function CircularScore({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{score}</span>
+        <span className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{score}</span>
       </div>
     </div>
   );
@@ -142,7 +142,7 @@ export default function AnalysisResults({
     <div className="space-y-6">
       {/* Main Score Card */}
       <div className={`rounded-xl p-6 ${decisionConfig.bgColor}`}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{decisionConfig.icon}</span>
@@ -154,7 +154,9 @@ export default function AnalysisResults({
               Your Rielor Score
             </p>
           </div>
-          <CircularScore score={finalScore} />
+          <div className="self-center sm:self-auto">
+            <CircularScore score={finalScore} />
+          </div>
         </div>
       </div>
 

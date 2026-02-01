@@ -27,7 +27,7 @@ export default function ImpliedSkills({ skills, missingSkills }: ImpliedSkillsPr
         {filtered.map((skill, i) => (
           <span 
             key={i}
-            className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 font-bold text-sm tracking-tight transition-all hover:bg-white hover:shadow-md hover:border-indigo-100"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 font-bold text-xs sm:text-sm tracking-tight transition-all hover:bg-white sm:hover:shadow-md sm:hover:border-indigo-100"
           >
             {skill}
           </span>

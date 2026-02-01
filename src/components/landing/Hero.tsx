@@ -14,7 +14,7 @@ const Hero: React.FC = () => {
       <div className="max-w-5xl mx-auto text-center relative">
         <div className="inline-flex items-center gap-2 px-3 py-1 mb-10 rounded-full bg-slate-900/[0.03] border border-slate-900/10 text-slate-600 text-[13px] font-semibold tracking-wide uppercase font-zalando">
           <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          AI-Powered Insights
+          Evidence-Based Insights
         </div>
         
         <h1 className="text-6xl md:text-7xl lg:text-9xl font-black tracking-tighter text-slate-900 mb-8 leading-[0.9] md:leading-[1.05] font-zalando">
@@ -23,7 +23,7 @@ const Hero: React.FC = () => {
         </h1>
         
         <p className="text-xl md:text-2xl text-slate-500 mb-12 max-w-2xl mx-auto leading-relaxed font-medium font-zalando">
-          Upload your resume and a job description. {"We'll"} tell you if {"it's"} a match, a maybe, or a skip. No fluff.
+          Upload your resume and a job description. Rielor shows how well you actually match the role — clearly and honestly.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5">

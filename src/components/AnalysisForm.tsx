@@ -98,7 +98,7 @@ export default function AnalysisForm() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8">
+    <div className="w-full max-w-6xl mx-auto space-y-8 px-4 sm:px-0">
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
@@ -133,7 +133,7 @@ export default function AnalysisForm() {
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button
             type="submit"
             disabled={isAnalyzing}
@@ -170,7 +170,7 @@ export default function AnalysisForm() {
             <button
               type="button"
               onClick={handleReset}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Reset
             </button>

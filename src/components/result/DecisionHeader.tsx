@@ -21,27 +21,27 @@ const DecisionHeader: React.FC<DecisionHeaderProps> = ({ decision, score }) => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-16 border-b border-slate-100">
-      <div className="text-center lg:text-left space-y-6">
+    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-12 pb-10 sm:pb-16 border-b border-slate-100">
+      <div className="text-center lg:text-left space-y-4 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/[0.03] border border-slate-900/10 text-[11px] font-black text-slate-500 tracking-[0.2em] uppercase">
           Signal Analysis Report
         </div>
         <div>
-          <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter mb-4 leading-none">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tighter mb-4 leading-none break-words">
             {decision}
           </h1>
-          <Badge variant={getVariant(decision)} className="text-sm py-1.5 px-6 font-black tracking-widest">
+          <Badge variant={getVariant(decision)} className="text-xs sm:text-sm py-1.5 px-5 sm:px-6 font-black tracking-widest">
             Fit recommendation
           </Badge>
         </div>
-        <p className="text-xl text-slate-500 max-w-lg font-medium leading-relaxed italic border-l-4 border-slate-100 pl-6">
+        <p className="text-base sm:text-xl text-slate-500 max-w-lg font-medium leading-relaxed italic border-l-4 border-slate-100 pl-4 sm:pl-6">
           "{getSubtext(decision)}"
         </p>
       </div>
 
       <div className="relative group">
         <div className="absolute inset-0 bg-slate-900/5 blur-[40px] rounded-full group-hover:bg-slate-900/10 transition-colors"></div>
-        <div className="relative w-48 h-48 flex items-center justify-center p-4 bg-white rounded-full shadow-2xl">
+        <div className="relative w-32 h-32 sm:w-48 sm:h-48 flex items-center justify-center p-3 sm:p-4 bg-white rounded-full shadow-2xl">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle
               className="text-slate-50"
@@ -66,7 +66,7 @@ const DecisionHeader: React.FC<DecisionHeaderProps> = ({ decision, score }) => {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-6xl font-black text-slate-900 tracking-tighter">{score}</span>
+            <span className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter">{score}</span>
             <span className="text-xs text-slate-400 font-black tracking-[0.3em] uppercase">Score</span>
           </div>
         </div>
